@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Card</title>
+    <link rel="stylesheet" href="/static/styles/index_style.css?v=2">
+    <link rel="stylesheet" href=" https://use.fontawesome.com/releases/v7.0.1/css/all.css">
+</head>
+<body>
+    <!-- header -->
+    <header>
+        <div class="container">
+            <div class="logo"><span class="orange">band</span><span class="violet">width</span><span class="black">.com</span></div>
+            <nav class="home-icon">
+                <a href="/"> 
+                    <i class="fa-regular fa-house"></i>
+                </a>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <div class="container">
+            <a href="/" class="btn-back"> Назад</a>
+
+            <!-- Основная карточка с описанием -->
+            <div class="plan-details-card">
+                
+                <!-- Левая часть (белая) -->
+                <div class="plan-details-left">
+                    <img src="{{ .order.ImageUrl }}" alt="Family on a couch">
+                </div>
+
+                <!-- Правая часть (оранжевая) -->
+                <div class="plan-details-right">
+                    <h1>{{ .order.Title }}</h1> 
+                    <p class="description">{{ .order.Description }}</p>
+                    <h2>Стоимость: <span class="Price">{{ .order.Price }}</span></h2>
+                </div>
+                
+            </div>
+        </div>
+    </main>
+</body>
+</html>
