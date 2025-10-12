@@ -29,7 +29,7 @@
                 </form >
                 
                 <div class="lang-selector">
-                    <a href="/cart">
+                    <a href="/estimate">
                         <img src="static/img/Vector.svg" alt="Заявки:">
                     </a>   
                     <span class="lang-icon">{{ .estimateCount }}</span>
@@ -38,7 +38,7 @@
 
             
             <div class="plans-grid">
-                {{ range .orders }}
+                {{ range .packages }}
                 <!-- Card -->
                 <div class="plan-card first">
                     <div class="plan-card-inner">
@@ -49,8 +49,8 @@
                         <p>{{ .ShortDescription }}</p>
                         <h3>{{ .Price }}</h3>
                         <div class="plan-buttons">
-                            <a href="/order/:{{ .ID }}" class="btn-first">Подробнее</a>
-                            <form action="/cart/add/{{ .ID }}" method="post" style="border: 0px solid;">
+                            <a href="/package/:{{ .ID }}" class="btn-first">Подробнее</a>
+                            <form action="/estimate/add/{{ .ID }}" method="post" style="border: 0px solid;">
                                 <button type="submit" class="btn-first">+</button>
                             </form>
                         </div>

@@ -25,12 +25,12 @@ func StartServer() {
 	r.LoadHTMLGlob("templates/*")
 	r.Static("/static", "./resources")
 
-	r.GET("/", handler.GetPackages)
-	r.GET("/order/:id", handler.GetPackage) // вот наш новый обработчик
-	r.GET("/cart", handler.GetEstimate) // вот наш новый обработчик
+	r.GET("/", handler.GetPackages) // получить все услуги 
+	r.GET("/package/:id", handler.GetPackage) // получить одну услугу
+	r.GET("/estimate", handler.GetEstimate) // получить корзину 
 
-	r.POST("/cart/add/:service_id", handler.AddPackageeToEstimate)
-	r.POST("/cart/delete/:id", handler.DeleteEstimate) // вот наш новый обработчик
+	r.POST("/estimate/add/:service_id", handler.AddPackageeToEstimate) // add to the cart
+	r.POST("/estimate/delete/:id", handler.DeleteEstimate) // вот наш новый обработчик
 
 	r.NoRoute(func(c *gin.Context) {
 		c.HTML(http.StatusNotFound, "404.html", nil)

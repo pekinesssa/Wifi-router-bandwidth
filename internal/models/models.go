@@ -5,6 +5,7 @@ import (
 	"time"
 )
 
+// Услуги
 type ConnectWifiPackages struct {
 	ID uint `gorm:"primaryKey"`
 	Title string `gorm:"type:varchar(255);not null"`
@@ -26,21 +27,22 @@ type User struct{
 	IsDeleted bool `gorm:"column:is_deleted;not null;default:false"`
 }
 
+// Заявкми 
 type BandwidthEstimate struct {
 	ID uint `gorm:"primaryKey"`
 	Status string `gorm:"type:varchar(255);not null;default:'draft'"`
 	CreatedAt time.Time `gorm:"column:created_at;not null;default:CURRENT_TIMESTAMP"`
+	CreatorID uint `gorm:"not null"`
 	Address string `gorm:"type:varchar(255)"`
 	TotalBandwidth float64 `gorm:"column:total_bandwidth"`
-	CreatorID uint `gorm:"not null"`
-	Creator User `gorm:"foreignKey:CreatorID"`
-
 	ModeratorID sql.NullInt64 
+	
 	Moderator User `gorm:"foreignKey:ModeratorID"`
-
+	Creator User `gorm:"foreignKey:CreatorID"`
 	Bandwidthconnections []Bandwidthconnections `gorm:"foreignKey:BandwidthEstimateID"`
 }
 
+//м-м
 type Bandwidthconnections struct {
 	BandwidthEstimateID uint `gorm:"primaryKey"`
     ConnectWifiPackagesID uint `gorm:"primaryKey"`

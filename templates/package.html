@@ -29,14 +29,14 @@
                 
                 <!-- Левая часть (белая) -->
                 <div class="plan-details-left">
-                    <img src="{{ .order.ImageUrl }}" alt="Family on a couch">
+                    <img src="{{ .package.ImageUrl }}" alt="Family on a couch">
                 </div>
 
                 <!-- Правая часть (оранжевая) -->
                 <div class="plan-details-right">
-                    <h1>{{ .order.Title }}</h1> 
-                    <p class="description">{{ .order.Description }}</p>
-                    <h2>Стоимость: <span class="Price">{{ .order.Price }}</span></h2>
+                    <h1>{{ .package.Title }}</h1> 
+                    <p class="description">{{ .package.Description }}</p>
+                    <h2>Стоимость: <span class="Price">{{ .package.Price }}</span></h2>
                 </div>
                 
             </div>

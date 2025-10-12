@@ -23,11 +23,11 @@
     
     <main>
         <div class="container">
-            {{ if .cart }}
+            {{ if .estimate }}
             <div class="top-bar">
                 <div class="Address-cart">
                     <p>Адрес: </p>
-                    <input type="text" class="Address-input" value="{{ .cart.Address }}" readonly>
+                    <input type="text" class="Address-input" value="{{ .estimate.Address }}" readonly>
                 </div>
             </div>
             <div style="margin-top: -30px;"> 
@@ -39,7 +39,7 @@
                 <div class="Formula-cart" style="margin-top: 20px;">
                     <p>Общая стоимость: </p>
                     <!-- Используем поле TotalBandwidth из модели -->
-                    <input type="text" class="Formula-input" value="{{ .cart.TotalBandwidth }}" readonly>
+                    <input type="text" class="Formula-input" value="{{ .estimate.TotalBandwidth }}" readonly>
                 </div>
             </div>
 
@@ -71,12 +71,12 @@
             
             <!-- Форма для логического удаления заявки -->
             <div style="margin-top: 30px; text-align: center;">
-                 <form action="/cart/delete/{{ .cart.ID }}" method="post">
+                 <form action="/estimate/delete/{{ .estimate.ID }}" method="post">
                     <button type="submit" class="btn-back" style="background-color: #dc3545; border: none; cursor: pointer;">Удалить заявку</button>
                 </form>
             </div>
 
-            {{ else }}
+            {{ else }} 
             <h1 style="text-align: center; margin-top: 50px;">Ваша корзина пуста</h1>
             <div style="text-align: center; margin-top: 20px;">
                 <a href="/" class="btn-back">Вернуться к услугам</a>
