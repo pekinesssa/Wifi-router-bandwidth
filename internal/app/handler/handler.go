@@ -28,18 +28,18 @@ func NewHandler(r *repository.Repository) *Handler {
 }
 
 func (h *Handler) GetPackages(ctx *gin.Context) {
-	var orders []models.ConnectWifiPackages
+	var packages []models.ConnectWifiPackages
 	var err error
 	const currentUserID = 1
 
 	searchQuery := ctx.Query("query") // получаем значение из поля поиска
 	if searchQuery == "" {            // если поле поиска пусто, то просто получаем из репозитория все записи
-		orders, err = h.Repository.GetPackages()
+		packages, err = h.Repository.GetPackages()
 		if err != nil {
 			logrus.Error(err)
 		}
 	} else {
-		orders, err = h.Repository.GetPackagesByTitle(searchQuery) // в ином случае ищем заказ по заголовку
+		packages, err = h.Repository.GetPackagesByTitle(searchQuery) // в ином случае ищем заказ по заголовку
 		if err != nil {
 			logrus.Error(err)
 		}
@@ -56,7 +56,7 @@ func (h *Handler) GetPackages(ctx *gin.Context) {
 
 	ctx.HTML(http.StatusOK, "index.html", gin.H{
 		"time":   time.Now().Format("15:04:05"),
-		"orders": orders,
+		"packages": packages,
 		"query":  searchQuery,
 		"estimateCount": estimateCount, 
 	})
@@ -75,14 +75,14 @@ func (h *Handler) GetPackage(ctx *gin.Context) {
 		return
 	}
 
-	order, err := h.Repository.GetPackage(uint(id))
+	packages, err := h.Repository.GetPackage(uint(id))
 	if err != nil {
 		logrus.Error(err)
 		return
 	}
 
-	ctx.HTML(http.StatusOK, "order.html", gin.H{
-		"order": order,
+	ctx.HTML(http.StatusOK, "package.html", gin.H{
+		"package": packages,
 	})
 }
 
@@ -96,11 +96,11 @@ func (h *Handler) GetEstimate(ctx *gin.Context) {
 
 	const currentUserID = 1
 
-	cart, err := h.Repository.GetDraftEstimate(currentUserID)
+	estimate, err := h.Repository.GetDraftEstimate(currentUserID)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
-			ctx.HTML(http.StatusOK, "cart.html", gin.H{
-				"cart":  nil,
+			ctx.HTML(http.StatusOK, "estimate.html", gin.H{
+				"estimate":  nil,
 				"goods": nil,
 			})
 			return
@@ -112,16 +112,16 @@ func (h *Handler) GetEstimate(ctx *gin.Context) {
 
 	var totalPrice float64
 	var goods []models.ConnectWifiPackages
-	for _, conn := range cart.Bandwidthconnections {
+	for _, conn := range estimate.Bandwidthconnections {
 		totalPrice += float64(conn.Connection.Price)
 		goods = append(goods, conn.Connection)
 	}
 
 	// Заполняем расчетные поля для передачи в шаблон
-	cart.TotalBandwidth = totalPrice
+	estimate.TotalBandwidth = totalPrice
 
-	ctx.HTML(http.StatusOK, "cart.html", gin.H{
-		"cart":        cart,
+	ctx.HTML(http.StatusOK, "estimate.html", gin.H{
+		"estimate":        estimate,
 		"goods":       goods,
 		"countOrders": len(goods), // Передаем количество услуг
 	})
@@ -131,9 +131,9 @@ func (h *Handler) AddPackageeToEstimate(ctx *gin.Context) {
 	const currentUserID = 1
 
 	serviceIdStr := ctx.Param("service_id")
-	cleanServixeIsStr:= strings.TrimPrefix(serviceIdStr, ":")
+	// cleanServixeIsStr:= strings.TrimPrefix(serviceIdStr, ":")
 
-	serviceID, err := strconv.Atoi(cleanServixeIsStr)
+	serviceID, err := strconv.Atoi(serviceIdStr)
 	if err != nil {
 		logrus.Errorf("Ошибка преобразования id: %v", err)
 		return 
@@ -145,7 +145,7 @@ func (h *Handler) AddPackageeToEstimate(ctx *gin.Context) {
 		return 
 	}
 
-	ctx.Redirect(http.StatusFound, "/cart")
+	ctx.Redirect(http.StatusFound, "/estimate")
 }
 
 func (h *Handler) DeleteEstimate(ctx *gin.Context) {
