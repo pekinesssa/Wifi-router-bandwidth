@@ -1,34 +1,33 @@
 package handler
 
 import (
+	"Lab1/internal/app/domain"
 	"Lab1/internal/app/repository"
-	"Lab1/internal/models"
+	"fmt"
+	"math/rand"
 	"net/http"
 	"strconv"
 	"strings"
-
-	// "strings"
 	"time"
-
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
-
-	// "golang.org/x/tools/go/packages"
 	"gorm.io/gorm"
 )
 
 type Handler struct {
-  Repository *repository.Repository
+	Repository *repository.Repository
 }
 
 func NewHandler(r *repository.Repository) *Handler {
-  return &Handler{
-    Repository: r,
-  }
+	return &Handler{
+		Repository: r,
+	}
 }
 
+const bucketName = "main" 
+
 func (h *Handler) GetPackages(ctx *gin.Context) {
-	var packages []models.ConnectWifiPackages
+	var packages []domain.ConnectWifiPackages
 	var err error
 	const currentUserID = 1
 
@@ -44,120 +43,166 @@ func (h *Handler) GetPackages(ctx *gin.Context) {
 			logrus.Error(err)
 		}
 	}
-	
-	draftEstimate, err := h.Repository.GetDraftEstimate(currentUserID)
-	var estimateCount int 
+
+	// draftEstimate, err := h.Repository.GetDraftEstimate(currentUserID)
+	// var estimateCount int
 	if err != nil && err != gorm.ErrRecordNotFound {
 		logrus.Warnf("Не удалось получить корзину для хедера: %v", err)
 	}
-	if err == nil {
-		estimateCount = len(draftEstimate.Bandwidthconnections)
-	}
+	// if err == nil {
+	// 	estimateCount = len(draftEstimate.Bandwidthconnections)
+	// }
 
-	ctx.HTML(http.StatusOK, "index.html", gin.H{
-		"time":   time.Now().Format("15:04:05"),
-		"packages": packages,
-		"query":  searchQuery,
-		"estimateCount": estimateCount, 
-	})
+	// ctx.JSON(http.StatusOK, gin.H{
+	// 	"time":   time.Now().Format("15:04:05"),
+	// 	"packages": packages,
+	// 	"query":  searchQuery,
+	// 	"estimateCount": estimateCount,
+	// })
+
+	ctx.JSON(http.StatusOK, packages)
 }
 
 func (h *Handler) GetPackage(ctx *gin.Context) {
-	idStr := ctx.Param("id") // получаем id заказа из урла (то есть из /order/:id)
-	// через двоеточие мы указываем параметры, которые потом сможем считать через функцию выше
-
+	idStr := ctx.Param("id")
 	cleanIsStr := strings.TrimPrefix(idStr, ":")
 
-	id, err := strconv.Atoi(cleanIsStr) // так как функция выше возвращает нам строку, нужно ее преобразовать в int
+	id, err := strconv.Atoi(cleanIsStr)
 	if err != nil {
 		logrus.Errorf("Неверный формат ID: %v", err)
-		ctx.String(http.StatusBadRequest, "Неверный формат ID")
+		ctx.JSON(http.StatusBadRequest, "Неверный формат ID")
 		return
 	}
 
 	packages, err := h.Repository.GetPackage(uint(id))
 	if err != nil {
 		logrus.Error(err)
+		ctx.JSON(http.StatusBadRequest, "Такого ID не существует")
 		return
 	}
 
-	ctx.HTML(http.StatusOK, "package.html", gin.H{
-		"package": packages,
-	})
+	ctx.JSON(http.StatusOK, packages)
 }
 
-func (h *Handler) GetEstimate(ctx *gin.Context) {
-	// idStr := ctx.Param("id")
-	// id, err := strconv.Atoi(idStr)
-	// if err != nil {
-	// 	logrus.Errorf("неверный ID корзины: %v", err)
-	// 	return
-	// }
-
-	const currentUserID = 1
-
-	estimate, err := h.Repository.GetDraftEstimate(currentUserID)
+func (h *Handler) PostPackage(ctx *gin.Context) {
+	var input repository.CreatePackage
+	err := ctx.ShouldBindJSON(&input)
 	if err != nil {
-		if err == gorm.ErrRecordNotFound {
-			ctx.HTML(http.StatusOK, "estimate.html", gin.H{
-				"estimate":  nil,
-				"goods": nil,
-			})
-			return
-		}
-		logrus.Errorf("ошибка получения корзины: %v", err)
-		ctx.String(http.StatusInternalServerError, "Ошибка сервера")
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	var totalPrice float64
-	var goods []models.ConnectWifiPackages
-	for _, conn := range estimate.Bandwidthconnections {
-		totalPrice += float64(conn.Connection.Price)
-		goods = append(goods, conn.Connection)
+	createdPackage, err := h.Repository.PostPackage(input)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
 	}
 
-	// Заполняем расчетные поля для передачи в шаблон
-	estimate.TotalBandwidth = totalPrice
+	fmt.Println("Creted package with", input.Title)
+	ctx.JSON(http.StatusCreated, createdPackage)
+}
 
-	ctx.HTML(http.StatusOK, "estimate.html", gin.H{
-		"estimate":        estimate,
-		"goods":       goods,
-		"countOrders": len(goods), // Передаем количество услуг
-	})
+func (h *Handler) PutPackage(ctx *gin.Context) {
+	var update repository.UpdatePackage
+	idStr := ctx.Param("id")
+	cleanIsStr := strings.TrimPrefix(idStr, ":")
+
+	id, err := strconv.Atoi(cleanIsStr)
+	if err != nil {
+		logrus.Errorf("Неверный формат ID: %v", err)
+		ctx.JSON(http.StatusBadRequest, "Неверный формат ID")
+		return
+	}
+
+	err = ctx.ShouldBindJSON(&update)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if err := h.Repository.PutPackage(uint(id), update); err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "не удалось обновить данные"})
+		return
+	}
+
+	ctx.JSON(http.StatusCreated, gin.H{"message": "Пакет успешно обновлен"})
+}
+
+func (h *Handler) DeletePackage(ctx *gin.Context) {
+	idStr := ctx.Param("id")
+	cleanStr := strings.TrimPrefix(idStr, ":")
+
+	id, err := strconv.Atoi(cleanStr)
+	if err != nil {
+		logrus.Errorf("Неверный формат ID: %v", err)
+		ctx.JSON(http.StatusBadRequest, "Неверный формат ID")
+		return
+	}
+
+	err = h.Repository.DeletePackage(uint(id))
+	if err != nil {
+		logrus.Errorf("Неверный формат ID: %v", err)
+		ctx.JSON(http.StatusBadRequest, "Неверный формат ID")
+		return
+	}	
+
+	ctx.JSON(http.StatusNoContent, "удалено")
 }
 
 func (h *Handler) AddPackageeToEstimate(ctx *gin.Context) {
-	const currentUserID = 1
+	const currentUserID = 3
 
-	serviceIdStr := ctx.Param("service_id")
+	serviceIdStr := ctx.Param("package_id")
 	// cleanServixeIsStr:= strings.TrimPrefix(serviceIdStr, ":")
 
 	serviceID, err := strconv.Atoi(serviceIdStr)
 	if err != nil {
 		logrus.Errorf("Ошибка преобразования id: %v", err)
-		return 
+		return
 	}
+	rand.Seed(time.Now().UnixNano())
+	randomNumber := rand.Intn(3)
 
-	err = h.Repository.AddPackageToEstimate(currentUserID, uint(serviceID))
+	estimate, err := h.Repository.AddPackageToEstimate(currentUserID, uint(serviceID), randomNumber)
 	if err != nil {
 		logrus.Errorf("ошибка добавления услуги в корзину: %v", err)
-		return 
+		return
 	}
 
-	ctx.Redirect(http.StatusFound, "/estimate")
+	ctx.JSON(http.StatusCreated, estimate)
 }
 
-func (h *Handler) DeleteEstimate(ctx *gin.Context) {
-	const currentUserID = 1 // Хардкодим ID пользователя
-
-	requestIdStr := ctx.Param("id")
-	requestID, _ := strconv.Atoi(requestIdStr)
-
-	err := h.Repository.DeleteEstimate(uint(requestID), currentUserID)
+func (h *Handler) UploadPackageImage(ctx *gin.Context) {
+	idStr := ctx.Param("id")
+	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		logrus.Errorf("ошибка удаления заявки: %v", err)
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "неверный формат ID услуги"})
+		return
 	}
 
-	ctx.Redirect(http.StatusFound, "/")
+	fileHeader, err := ctx.FormFile("image")
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "файл 'image' не найден в запросе"})
+		return
+	}
+
+	file, err := fileHeader.Open()
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "не удалось открыть файл"})
+		return
+	}
+	defer file.Close() 
+
+	err = h.Repository.UploadPackageImage(uint(id), file, fileHeader)
+	if err != nil {
+		if strings.Contains(err.Error(), "не найдена") {
+			ctx.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+			return
+		}
+		logrus.Errorf("ошибка при загрузке изображения: %v", err)
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "внутренняя ошибка сервера"})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{"message": "Изображение успешно загружено и обновлено"})
 }
