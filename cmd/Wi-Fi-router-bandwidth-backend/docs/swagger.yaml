@@ -1,0 +1,18 @@
+basePath: /api
+host: localhost:8080
+info:
+  contact:
+    name: Kaverina
+    url: https://t.me/ya_kaverina
+  description: Это сервер API с аутентификацией по JWT и управлением пользователями.
+  title: API для лабораторной работы
+  version: "1.0"
+paths: {}
+securityDefinitions:
+  BearerAuth:
+    description: '"Для доступа к защищенным методам введите ''Bearer '' и после пробела
+      ваш JWT токен."'
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

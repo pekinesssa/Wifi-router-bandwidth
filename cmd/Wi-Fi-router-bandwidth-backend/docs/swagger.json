@@ -1,0 +1,23 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "Это сервер API с аутентификацией по JWT и управлением пользователями.",
+        "title": "API для лабораторной работы",
+        "contact": {
+            "name": "Kaverina",
+            "url": "https://t.me/ya_kaverina"
+        },
+        "version": "1.0"
+    },
+    "host": "localhost:8080",
+    "basePath": "/api",
+    "paths": {},
+    "securityDefinitions": {
+        "BearerAuth": {
+            "description": "\"Для доступа к защищенным методам введите 'Bearer ' и после пробела ваш JWT токен.\"",
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
+        }
+    }
+}
