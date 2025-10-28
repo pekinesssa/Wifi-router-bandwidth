@@ -1,14 +1,17 @@
 package handler
 
 import (
-	"Lab1/internal/app/domain"
-	"Lab1/internal/app/repository"
+	"Wi-Fi-router-bandwidth-backend/internal/app/domain"
+	"Wi-Fi-router-bandwidth-backend/internal/app/middleware"
+	"Wi-Fi-router-bandwidth-backend/internal/app/repository"
+	"Wi-Fi-router-bandwidth-backend/internal/pkg"
 	"fmt"
 	"math/rand"
 	"net/http"
 	"strconv"
 	"strings"
 	"time"
+
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
@@ -16,11 +19,13 @@ import (
 
 type Handler struct {
 	Repository *repository.Repository
+	Redis	*pkg.RedisClient
 }
 
-func NewHandler(r *repository.Repository) *Handler {
+func NewHandler(r *repository.Repository, redisClient *pkg.RedisClient) *Handler {
 	return &Handler{
 		Repository: r,
+		Redis:	redisClient,
 	}
 }
 
@@ -150,6 +155,12 @@ func (h *Handler) DeletePackage(ctx *gin.Context) {
 }
 
 func (h *Handler) AddPackageeToEstimate(ctx *gin.Context) {
+	userID := middleware.GetUserID(ctx)
+	if userID == 0 {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "User not authenticated"})
+		return
+	}
+
 	const currentUserID = 3
 
 	serviceIdStr := ctx.Param("package_id")
@@ -173,6 +184,12 @@ func (h *Handler) AddPackageeToEstimate(ctx *gin.Context) {
 }
 
 func (h *Handler) UploadPackageImage(ctx *gin.Context) {
+	userID := middleware.GetUserID(ctx)
+	if userID == 0 {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "User not authenticated"})
+		return
+	}
+
 	idStr := ctx.Param("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {

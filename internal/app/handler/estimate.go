@@ -1,7 +1,8 @@
 package handler
 
 import (
-	"Lab1/internal/app/repository"
+	"Wi-Fi-router-bandwidth-backend/internal/app/middleware"
+	"Wi-Fi-router-bandwidth-backend/internal/app/repository"
 	"errors"
 	"fmt"
 	"net/http"
@@ -13,6 +14,10 @@ import (
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 )
+
+type ErrorResponse struct {
+	Error string `json:"error" example:"Сообщение об ошибке"`
+}
 
 type PackageResponse struct {
 	ID	uint   
@@ -41,6 +46,12 @@ type EstimateListResponse struct {
 }
 
 func (h *Handler) GetEstimate(ctx *gin.Context) {
+	userID := middleware.GetUserID(ctx)
+	if userID == 0 {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "User not authenticated"})
+		return
+	}
+
 	// const currentUserID = 3
 	idStr := ctx.Param("id") // указываем айди пользователя 
 	cleanIdStr:=strings.TrimPrefix(idStr, ":")
@@ -68,6 +79,12 @@ func (h *Handler) GetEstimate(ctx *gin.Context) {
 }
 
 func (h *Handler) PutEstimate(ctx *gin.Context) {
+	userID := middleware.GetUserID(ctx)
+	if userID == 0 {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "User not authenticated"})
+		return
+	}
+
 	var update repository.BandwidthAdded
 	idStr := ctx.Param("id")
 	cleanIsStr := strings.TrimPrefix(idStr, ":")
@@ -93,7 +110,14 @@ func (h *Handler) PutEstimate(ctx *gin.Context) {
 	ctx.JSON(http.StatusCreated, gin.H{"message": "Данные заявки успешно обновлены"})
 }
 
+
 func (h *Handler) GetFieldEstimate(ctx *gin.Context) {
+	userID := middleware.GetUserID(ctx)
+	if userID == 0 {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "User not authenticated"})
+		return
+	}
+
 	idStr := ctx.Param("id") 
 	cleanIdStr:=strings.TrimPrefix(idStr, ":")
 	
@@ -143,7 +167,22 @@ func (h *Handler) GetFieldEstimate(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, response)
 }
 
+// GetEstimate godoc
+// @Summary Получение всех сетевых пакетов
+// @Description Получение списка всех сетевых пакетов с возможностью фильтрации по названию
+// @Tags estimate
+// @Accept json
+// @Produce json
+// @Param packageTitle query string false "Фильтр по названию материала"
+// @Success 200 {array} []EstimateListResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /estimate [get]
 func (h *Handler) GetListEstimate(ctx *gin.Context) {
+	userID := middleware.GetUserID(ctx)
+	if userID == 0 {
+		ctx.JSON(http.StatusUnauthorized, ErrorResponse{Error: "User not authenticated"})
+		return
+	}
 	var filters repository.EstimateFilterOptions
 	estimates, err := h.Repository.GetFilteredEstimates(filters)
 	if err != nil {
@@ -169,7 +208,25 @@ func (h *Handler) GetListEstimate(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, response)
 }
 
+// CreateMaterial godoc
+// @Summary Создание нового материала
+// @Description Создание материала (только для модераторов)
+// @Tags estimate
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Success 201 {object} repository.CreatorBandwidthAdded
+// @Failure 400 {object} ErrorResponse
+// @Failure 403 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /edit/data/ [post]
 func (h *Handler) PutCreatorEstimate(ctx *gin.Context) {
+	userID := middleware.GetUserID(ctx)
+	if userID == 0 {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "User not authenticated"})
+		return
+	}
+
 	var update repository.CreatorBandwidthAdded
 	idStr := ctx.Param("id")
 	cleanIsStr := strings.TrimPrefix(idStr, ":")
@@ -196,6 +253,11 @@ func (h *Handler) PutCreatorEstimate(ctx *gin.Context) {
 }
 
 func (h *Handler) ModerateEstimate(ctx *gin.Context) {
+	userID := middleware.GetUserID(ctx)
+	if userID == 0 {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "User not authenticated"})
+		return
+	}
 	idStr := ctx.Param("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
@@ -237,6 +299,12 @@ func (h *Handler) ModerateEstimate(ctx *gin.Context) {
 }
 
 func (h *Handler) DeleteEstimate(ctx *gin.Context) {
+	userID := middleware.GetUserID(ctx)
+	if userID == 0 {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "User not authenticated"})
+		return
+	}
+
 	idStr := ctx.Param("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {

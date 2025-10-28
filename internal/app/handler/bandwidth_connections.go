@@ -1,9 +1,11 @@
 package handler
 
 import (
+	"Wi-Fi-router-bandwidth-backend/internal/app/middleware"
 	"errors"
 	"net/http"
 	"strconv"
+
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
@@ -14,6 +16,11 @@ type UpdatePackageInput struct {
 }
 
 func (h *Handler) UpdatePackageInEstimate(ctx *gin.Context) {
+	userID := middleware.GetUserID(ctx)
+	if userID == 0 {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "User not authenticated"})
+		return
+	}
 	estimateIDStr := ctx.Param("estimate_id")
 	packageIDStr := ctx.Param("package_id")
 
@@ -49,6 +56,11 @@ func (h *Handler) UpdatePackageInEstimate(ctx *gin.Context) {
 }
 
 func (h *Handler) DeletePackageFromEstimate(ctx *gin.Context) {
+	userID := middleware.GetUserID(ctx)
+	if userID == 0 {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "User not authenticated"})
+		return
+	}
 	estimateIDStr := ctx.Param("estimate_id")
 	packageIDStr := ctx.Param("package_id")
 

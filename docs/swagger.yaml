@@ -1,0 +1,123 @@
+basePath: /api
+definitions:
+  api.pingResp:
+    properties:
+      status:
+        type: string
+    type: object
+  handler.ErrorResponse:
+    properties:
+      error:
+        example: Сообщение об ошибке
+        type: string
+    type: object
+  handler.EstimateListResponse:
+    properties:
+      createdAt:
+        type: string
+      creatorID:
+        type: integer
+      id:
+        type: integer
+      moderatorID:
+        format: int64
+        type: integer
+      status:
+        type: string
+    type: object
+  repository.CreatorBandwidthAdded:
+    properties:
+      createdAt:
+        type: string
+      creatorID:
+        type: integer
+      status:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: API для расчета земляных работ при разработке котлована
+  title: DIA API
+  version: "1.0"
+paths:
+  /edit/data/:
+    post:
+      consumes:
+      - application/json
+      description: Создание материала (только для модераторов)
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/repository.CreatorBandwidthAdded'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Создание нового материала
+      tags:
+      - estimate
+  /estimate:
+    get:
+      consumes:
+      - application/json
+      description: Получение списка всех сетевых пакетов с возможностью фильтрации
+        по названию
+      parameters:
+      - description: Фильтр по названию материала
+        in: query
+        name: packageTitle
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              items:
+                $ref: '#/definitions/handler.EstimateListResponse'
+              type: array
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      summary: Получение всех сетевых пакетов
+      tags:
+      - estimate
+  /ping/{name}:
+    get:
+      description: very very friendly response
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.pingResp'
+      summary: Show hello text
+      tags:
+      - Tests
+schemes:
+- http
+securityDefinitions:
+  BearerAuth:
+    description: 'Введите JWT токен в формате: "Bearer {your_token}".'
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

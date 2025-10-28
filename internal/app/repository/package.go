@@ -1,8 +1,8 @@
 package repository
 
 import (
-	"Lab1/internal/app/domain"
-	"Lab1/internal/pkg"
+	"Wi-Fi-router-bandwidth-backend/internal/app/domain"
+	"Wi-Fi-router-bandwidth-backend/internal/pkg"
 	"context"
 	"errors"
 	"fmt"

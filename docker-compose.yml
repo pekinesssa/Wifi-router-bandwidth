@@ -78,6 +78,14 @@ services:
     ports:
       - "8081:8080" # Adminer будет доступен на http://localhost:8081
     restart: unless-stopped
+  redis:
+    image: redis:6.2-alpine
+    restart: always
+    ports:
+      - '6379:6379'
+    command: redis-server --save 20 1 --loglevel warning --requirepass password
+    volumes:
+      - redis-data:/data
 
 ## By default this config uses default local driver,
 ## For custom volumes replace with volume driver configuration.
@@ -91,3 +99,7 @@ volumes:
   data4-1:
   data4-2:
   postgres-data: 
+  postgresdb-data:
+    driver: local
+  redis-data:
+    driver: local

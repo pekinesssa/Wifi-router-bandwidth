@@ -1,16 +1,20 @@
 package api
 
 import (
-	"Lab1/internal/app/handler"
-	"Lab1/internal/app/repository"
-	"Lab1/internal/pkg"
+	"Wi-Fi-router-bandwidth-backend/internal/app/handler"
+	"Wi-Fi-router-bandwidth-backend/internal/app/middleware"
+	"Wi-Fi-router-bandwidth-backend/internal/app/repository"
+	"Wi-Fi-router-bandwidth-backend/internal/pkg"
 	"log"
+	"net/http"
 	"os"
 
-	// "net/http"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	"github.com/sirupsen/logrus"
+
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 func StartServer() {
@@ -34,35 +38,56 @@ func StartServer() {
 		logrus.Error("ошибка инициализации репозитория", err)
 	}
 
-	handler := handler.NewHandler(repo)
+	redisClient, err := pkg.NewRedisClient("localhost:6379", "password", 0)
+	if err != nil {
+		redisClient = nil
+	} else {
+		defer redisClient.Close()
+	}
 
+	handler := handler.NewHandler(repo, redisClient)
+	
 	r := gin.Default()
-	v1 := r.Group("/api")
+
+	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+
+	public := r.Group("/api")
 	{
-		v1.GET("/", handler.GetPackages) // получить все услуги (с фильтрацией)
-		v1.GET("/package/:id", handler.GetPackage) // получить одну услугу
-		// v1.GET("/estimate", handler.GetEstimate) // получить корзину 
-		v1.POST("/package/add", handler.PostPackage) 
-		v1.PUT("/package/edit/:id", handler.PutPackage)
-		v1.DELETE("/package/delete/:id", handler.DeletePackage)
-		v1.POST("/user/registrate", handler.PostUser) 
-		v1.GET("/user/:id", handler.GetUser) 
-		v1.PUT("/user/edit/:id", handler.PutUser) 
-		v1.POST("/user/authenticate", handler.PostLoginUser) 
-		v1.GET("/estimate/:id", handler.GetEstimate) 
-		v1.PUT("/estimate/edit/:id", handler.PutEstimate)
-		v1.GET("/estimate/fields/:id", handler.GetFieldEstimate) 
-		v1.GET("/estimate", handler.GetListEstimate) 
-		v1.PUT("/estimate/edit/data/:id", handler.PutCreatorEstimate)
-		v1.PUT("/estimate/:id/moderate", handler.ModerateEstimate)
-		v1.DELETE("/estimate/:id", handler.DeleteEstimate)
-		v1.POST("/packages/:id/image", handler.UploadPackageImage)
-		estimatePackages := v1.Group("/estimates/:estimate_id/packages")
+		public.GET("/", handler.GetPackages)
+		public.GET("/package/:id", handler.GetPackage)
+		public.POST("/user/registrate", handler.PostUser) 
+		// public.POST("/user/authenticate", handler.PostLoginUser)
+		public.POST("/user/authenticate", handler.PostLoginUserJWT)
+	}
+
+	protected := r.Group("/api")
+	protected.Use(middleware.AuthRequired(redisClient))
+	{
+		protected.POST("/user/logout", handler.LogoutUser)
+		protected.GET("/user/:id", handler.GetUser)
+		protected.PUT("/user/edit/:id", handler.PutUser)
+		protected.GET("/estimate/:id", handler.GetEstimate)
+		protected.PUT("/estimate/edit/:id", handler.PutEstimate)
+		protected.GET("/estimate/fields/:id", handler.GetFieldEstimate)
+		protected.PUT("/estimate/edit/data/:id", handler.PutCreatorEstimate)
+		protected.DELETE("/estimate/:id", handler.DeleteEstimate)
+		protected.POST("/estimate/add/:package_id", handler.AddPackageeToEstimate)
+		protected.POST("/packages/:id/image", handler.UploadPackageImage)
+		
+		estimatePackages := protected.Group("/estimates/:estimate_id/packages")
 		{
 			estimatePackages.PUT("/:package_id", handler.UpdatePackageInEstimate)
 			estimatePackages.DELETE("/:package_id", handler.DeletePackageFromEstimate)
 		}
+
+		moderator := protected.Group("/")
+		moderator.Use(middleware.ModeratorRequired())
+		{
+			moderator.GET("/estimate", handler.GetListEstimate)
+			moderator.PUT("/estimate/:id/moderate", handler.ModerateEstimate)
+		}
 	}
+
 	// добавляем наш html/шаблон
 	// r.LoadHTMLGlob("templates/*")
 	r.Static("/static", "./resources")
@@ -81,3 +106,19 @@ func StartServer() {
 	log.Println("Server down")
 }
 
+type pingReq struct{}
+type pingResp struct {
+   Status string `json:"status"`
+}
+
+// Ping godoc
+// @Summary      Show hello text
+// @Description  very very friendly response
+// @Tags         Tests
+// @Produce      json
+// @Success      200  {object}  pingResp
+// @Router       /ping/{name} [get]
+func Ping(gCtx *gin.Context) {
+   name := gCtx.Param("name")
+   gCtx.String(http.StatusOK, "Hello %s", name)
+}

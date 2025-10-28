@@ -1,7 +1,7 @@
 package repository
 
 import (
-	"Lab1/internal/app/domain"
+	"Wi-Fi-router-bandwidth-backend/internal/app/domain"
 	"fmt"
 
 	"golang.org/x/crypto/bcrypt"
@@ -136,4 +136,21 @@ func (r *Repository) UnloginUser(imp CreateUser) (uint, error) {
 		return 0, fmt.Errorf("неверный логин или пароль")
 	}
 	return authUser.ID, result.Error
+}
+
+func (r *Repository) LoginUserJWT(imp CreateUser) (*domain.User, error) {
+	var user domain.User
+	result := r.db.Where("login = ? AND is_deleted = ?", imp.Login, false).First(&user)
+	if result.Error != nil {
+		if result.Error == gorm.ErrRecordNotFound {
+			return nil, fmt.Errorf("неверный логин или пароль")
+		}
+		return nil, result.Error
+	}
+	
+	if !CheckHashPassword(imp.Password, user.HashedPassword) {
+		return nil, fmt.Errorf("неверный логин или пароль")
+	}
+	
+	return &user, nil
 }
