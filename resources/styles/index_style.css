@@ -469,10 +469,10 @@ header .container {
   padding: 20px;
 }
 
-.cart-disabled {
+.estimate-disabled {
     cursor: not-allowed; 
 }
 
-.cart-disabled img {
+.estimate-disabled img {
     filter: invert(27%) sepia(51%) saturate(2878%) hue-rotate(346deg) brightness(104%) contrast(97%);
 }
