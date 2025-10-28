@@ -29,10 +29,17 @@
                 </form >
                 
                 <div class="lang-selector">
-                    <a href="/estimate">
-                        <img src="static/img/Vector.svg" alt="Заявки:">
-                    </a>   
-                    <span class="lang-icon">{{ .estimateCount }}</span>
+                    {{ if .cartDisabled }}
+                        <span class="cart-disabled">
+                            <img src="static/img/Vector.svg" alt="Заявки:">
+                        </span>   
+                        <span class="lang-icon">0</span>
+                    {{ else }}
+                        <a href="/estimate">
+                            <img src="static/img/Vector.svg" alt="Заявки:">
+                        </a>   
+                        <span class="lang-icon">{{ .estimateCount }}</span>
+                    {{ end }}
                 </div>
             </div>
 

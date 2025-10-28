@@ -32,6 +32,9 @@ func (h *Handler) GetPackages(ctx *gin.Context) {
 	var err error
 	const currentUserID = 1
 
+	cartDeletedParam := ctx.Query("cart_deleted")
+	cartDisabled := (cartDeletedParam == "true")
+
 	searchQuery := ctx.Query("query") // получаем значение из поля поиска
 	if searchQuery == "" {            // если поле поиска пусто, то просто получаем из репозитория все записи
 		packages, err = h.Repository.GetPackages()
@@ -59,6 +62,7 @@ func (h *Handler) GetPackages(ctx *gin.Context) {
 		"packages": packages,
 		"query":  searchQuery,
 		"estimateCount": estimateCount, 
+		"cartDisabled":  cartDisabled,
 	})
 }
 
@@ -159,5 +163,6 @@ func (h *Handler) DeleteEstimate(ctx *gin.Context) {
 		logrus.Errorf("ошибка удаления заявки: %v", err)
 	}
 
-	ctx.Redirect(http.StatusFound, "/")
+	// ctx.Redirect(http.StatusFound, "/")
+	ctx.Redirect(http.StatusFound, "/?cart_deleted=true")
 }
