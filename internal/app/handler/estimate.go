@@ -57,14 +57,14 @@ func (h *Handler) GetEstimate(ctx *gin.Context) {
 			ctx.JSON(http.StatusOK, estimate.ID)
 			return
 		}
-		logrus.Errorf("ошибка получения корзины: %v", err)
+		logrus.Errorf("ошибка получения корзины оценки сетевых пакетов: %v", err)
 		ctx.String(http.StatusInternalServerError, "Ошибка сервера")
 		return
 	}
 
 	CountOfPackages:= len(estimate.Bandwidthconnections)
 
-	ctx.JSON(http.StatusOK, gin.H{"id заявки": estimate.ID, "id создателя заявки": estimate.CreatorID, "CountOfPackages": CountOfPackages, "status": estimate.Status})
+	ctx.JSON(http.StatusOK, gin.H{"id оценки сетевых пакетов": estimate.ID, "id создателя оценки сетевых пакетов": estimate.CreatorID, "CountOfPackages": CountOfPackages, "status": estimate.Status})
 }
 
 func (h *Handler) PutEstimate(ctx *gin.Context) {
@@ -90,7 +90,7 @@ func (h *Handler) PutEstimate(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusCreated, gin.H{"message": "Данные заявки успешно обновлены"})
+	ctx.JSON(http.StatusCreated, gin.H{"message": "Данные оценки сетевых пакетов успешно обновлены"})
 }
 
 func (h *Handler) GetFieldEstimate(ctx *gin.Context) {
@@ -106,7 +106,7 @@ func (h *Handler) GetFieldEstimate(ctx *gin.Context) {
 	estimate, err := h.Repository.GetFieldEstimate(uint(id))
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			ctx.JSON(http.StatusNotFound, gin.H{"error": "заявка не найдена"})
+			ctx.JSON(http.StatusNotFound, gin.H{"error": "Оценка сетевых пакетов не найдена"})
 			return
 		}
 		logrus.Errorf("ошибка получения заявки: %v", err)
@@ -147,7 +147,7 @@ func (h *Handler) GetListEstimate(ctx *gin.Context) {
 	var filters repository.EstimateFilterOptions
 	estimates, err := h.Repository.GetFilteredEstimates(filters)
 	if err != nil {
-		logrus.Errorf("ошибка получения списка заявок: %v", err)
+		logrus.Errorf("ошибка получения списка оценки сетевых пакетов: %v", err)
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "внутренняя ошибка сервера"})
 		return
 	}
@@ -228,19 +228,19 @@ func (h *Handler) ModerateEstimate(ctx *gin.Context) {
 			return
 		}
 		
-		logrus.Errorf("ошибка при модерации заявки: %v", err)
+		logrus.Errorf("ошибка при модерации оценки сетевых пакетов: %v", err)
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "внутренняя ошибка сервера"})
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{"message": fmt.Sprintf("Заявка %d успешно обновлена до статуса '%s'", estimateID, input.Status)})
+	ctx.JSON(http.StatusOK, gin.H{"message": fmt.Sprintf("Оценка сетевых пакетов %d успешно обновлена до статуса '%s'", estimateID, input.Status)})
 }
 
 func (h *Handler) DeleteEstimate(ctx *gin.Context) {
 	idStr := ctx.Param("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "неверный формат ID заявки"})
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "неверный формат ID оценки сетевых пакетов"})
 		return
 	}
 	estimateID := uint(id)
@@ -248,14 +248,14 @@ func (h *Handler) DeleteEstimate(ctx *gin.Context) {
 	err = h.Repository.DeleteEstimate(estimateID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			ctx.JSON(http.StatusNotFound, gin.H{"error": fmt.Sprintf("Заявка с ID %d не найдена", estimateID)})
+			ctx.JSON(http.StatusNotFound, gin.H{"error": fmt.Sprintf("Оценка сетевых пакетов с ID %d не найдена", estimateID)})
 			return
 		}
 
-		logrus.Errorf("ошибка при удалении заявки: %v", err)
+		logrus.Errorf("ошибка при удалении оценки сетевых пакетов: %v", err)
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "внутренняя ошибка сервера"})
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{"message": fmt.Sprintf("Заявка с ID %d успешно удалена", estimateID)})
+	ctx.JSON(http.StatusOK, gin.H{"message": fmt.Sprintf("Оценка сетевых пакетов с ID %d успешно удалена", estimateID)})
 }

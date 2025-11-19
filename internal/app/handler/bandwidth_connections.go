@@ -19,12 +19,12 @@ func (h *Handler) UpdatePackageInEstimate(ctx *gin.Context) {
 
 	estimateID, err := strconv.Atoi(estimateIDStr)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "неверный формат ID заявки"})
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "неверный формат ID оценки сетевых пакетов"})
 		return
 	}
 	packageID, err := strconv.Atoi(packageIDStr)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "неверный формат ID услуги"})
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "неверный формат ID сетевого пакета"})
 		return
 	}
 
@@ -37,7 +37,7 @@ func (h *Handler) UpdatePackageInEstimate(ctx *gin.Context) {
 	err = h.Repository.UpdatePackageInEstimate(uint(estimateID), uint(packageID), input.DeviceCount)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			ctx.JSON(http.StatusNotFound, gin.H{"error": "указанная услуга в данной заявке не найдена"})
+			ctx.JSON(http.StatusNotFound, gin.H{"error": "указанная услуга в данной оценки сетевых пакетов не найдена"})
 			return
 		}
 		logrus.Errorf("ошибка при обновлении услуги в заявке: %v", err)
@@ -45,7 +45,7 @@ func (h *Handler) UpdatePackageInEstimate(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{"message": "Количество устройств для услуги успешно обновлено"})
+	ctx.JSON(http.StatusOK, gin.H{"message": "Количество устройств для сетевого пакета успешно обновлено"})
 }
 
 func (h *Handler) DeletePackageFromEstimate(ctx *gin.Context) {
@@ -54,19 +54,19 @@ func (h *Handler) DeletePackageFromEstimate(ctx *gin.Context) {
 
 	estimateID, err := strconv.Atoi(estimateIDStr)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "неверный формат ID заявки"})
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "неверный формат ID оценки сетевых пакетов"})
 		return
 	}
 	packageID, err := strconv.Atoi(packageIDStr)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "неверный формат ID услуги"})
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "неверный формат ID сетевого пакета"})
 		return
 	}
 
 	err = h.Repository.DeletePackageFromEstimate(uint(estimateID), uint(packageID))
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			ctx.JSON(http.StatusNotFound, gin.H{"error": "указанная услуга в данной заявке не найдена"})
+			ctx.JSON(http.StatusNotFound, gin.H{"error": "указанный сетевой пакет в данной оценке сетевых пакетов не найдена"})
 			return
 		}
 		logrus.Errorf("ошибка при удалении услуги из заявки: %v", err)
@@ -74,5 +74,5 @@ func (h *Handler) DeletePackageFromEstimate(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{"message": "Услуга успешно удалена из заявки"})
+	ctx.JSON(http.StatusOK, gin.H{"message": "Сетевой пакет успешно удалена из оценки сетевых пакетов"})
 }
